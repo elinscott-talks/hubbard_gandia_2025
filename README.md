@@ -6,10 +6,6 @@ For use by PSI researchers only
 
 For an example see [slides.pdf](./slides.pdf)
 
-## Missing `touying`?
-
-Don't forget to run `git submodule update` to get access to the latest version of `touying`!
-
 ## Installing fonts
 
 To install the Arial font in Ubuntu, run
@@ -18,3 +14,7 @@ To install the Arial font in Ubuntu, run
 sudo apt install ttf-mscorefonts-installer
 sudo fc-cache -vr
 ```
+
+## To do
+ - [ ] remove duplication of the headers and footers code
+ - [ ] replace `png`s with `svg`s once `typst` handles `svg`s more robustly
