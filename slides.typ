@@ -4,7 +4,7 @@
 #import "@preview/xarrow:0.3.0": xarrow
 #import "@preview/cetz:0.4.1"
 #import "psi-slides-0.6.1.typ": *
-#import "@preview/grayness:0.3.0": image-grayscale
+#import "@preview/grayness:0.3.0": image-grayscale, image-transparency
 #import "@preview/algorithmic:1.0.3"
 #import algorithmic: algorithm
 
@@ -13,11 +13,11 @@
 #show: psi-theme.with(aspect-ratio: "16-9",
                       color-scheme: "pink-yellow",
                              config-info(
-                                title: [Koopmans functionals],
-                                subtitle: [How satisfying piecewise linearity can yield reliable band structures],
+                                title: [Alternative linear response strategies],
+                                subtitle: [Spin-resolution and orbital energy/ΔSCF equivalence],
                                 author: [Edward Linscott],
-                                date: datetime(year: 2025, month: 8, day: 27),
-                                location: [Psi-k],
+                                date: datetime(year: 2025, month: 9, day: 25),
+                                location: [Gandia],
                                 references: [references.bib],
                              ))
 
@@ -31,7 +31,7 @@
   text(fill: white, cite(reference))
 }
 
-#let delayedmark(start, content, tag: none, color: red, mark: mark, color-before: black, alternatives: none) = {
+#let delayedmark(start, content, tag: none, color: primary, mark: mark, color-before: black, alternatives: none) = {
    let entries = (mark(content, tag: tag, color: color-before),)*(start - 1) + (mark(content, tag: tag, color: color),)
    alternatives(repeat-last: true, ..entries)
 }
@@ -44,74 +44,290 @@
 
 #title-slide()
 
-== Predicting spectral properties
+#matrix-slide(repeat: 3, self => [
 
-Spectral properties are fundamental to understanding materials...
+  #let (uncover, only, alternatives) = utils.methods(self)
 
-#align(center, 
-grid(columns: 3, column-gutter:  1em,
+  #image("figures/figure_2_cropped_recoloured.svg", width: 100%)
+spin-resolved linear response
+#pause
+],[
+  #let data = read("figures/fig_en_curve_sl_annotated_zoom_recolored.svg", encoding: none)
+  #alternatives()[
+    #image-transparency(data, format: "svg", alpha: 100%)
+    #text([orbital energy/ΔSCF equivalence \ (Koopmans functionals)])
+  ][
+    #image-transparency(data, format: "svg", alpha: 20%)
+    #text(fill: gray, [orbital energy/ΔSCF equivalence \ (Koopmans functionals)])
+  ]
+])
+= Spin-resolved linear response
+==
+#slide(repeat: 5, self => [
+
+  #let (uncover, only, alternatives, delayedmark, delayedmarkhl) = methods-with-marks(self)
+
+  #align(horizon,
+    grid(columns: (1fr, 1fr), align: horizon + center, inset: 1em,
+    [$ E_U = sum_(delayedmark(#2, I sigma, color: primary)) U^delayedmark(#3, I, color: secondary) / 2 "Tr"[bold(n)^(delayedmark(#2, I sigma, color: primary)) (1 - bold(n)^(delayedmark(#2, I sigma, color: primary)))] $],
+    [$ U^delayedmark(#3, I, color: secondary) = [chi_0^(-1) - chi^(-1)]_(I I) $],
+    [#pause #pause #pause functional treats spin channels separately],
+    [#pause LR treats them together],
+    )
+  )
+
+  #blcite(<Linscott2018>)
+])
+
+#focus-slide()[Why?]
+
+==
+
+#align(top,
+  image("figures/prb2018_pdf.png", width: 100%, height: 100%)
+)
+
+== Spin-resolved linear response
+
+#slide(repeat: 8, self => [
+
+  #let (uncover, only, alternatives, delayedmark, delayedmarkhl) = methods-with-marks(self)
+
+  #grid(columns: (1fr, auto, 1fr), align: horizon + center, inset: 1em,
+  [conventional], [#sym.arrow.r], [spin-resolved],
+[#pause $ chi_(I J) = (d n^I) / (d v^J)$],
+[#pause #sym.arrow.r],
+[$chi_(I J)^(sigma sigma') = (d n^(I sigma)) / (d v^(J sigma')) $],
+[#pause $ mat(chi_(1 1), chi_(1 2); chi_(2 1), chi_(2 2))$],
+[#pause #sym.arrow.r],
+[$
+mat(delayedmarkhl(#6, mat(delim: #none, chi^(arrow.t arrow.t)_(1 1), chi^(arrow.t arrow.b)_(1 1); chi^(arrow.b arrow.t)_(1 1), chi^(arrow.b arrow.b)_(1 1))), 
+    mat(delim: #none, chi^(arrow.t arrow.t)_(1 2), chi^(arrow.t arrow.b)_(1 2); chi^(arrow.b arrow.t)_(1 2), chi^(arrow.b arrow.b)_(1 2));
+    mat(delim: #none, chi^(arrow.t arrow.t)_(2 1), chi^(arrow.t arrow.b)_(2 1); chi^(arrow.b arrow.t)_(2 1), chi^(arrow.b arrow.b)_(2 1)), 
+    mat(delim: #none, chi^(arrow.t arrow.t)_(2 2), chi^(arrow.t arrow.b)_(2 2); chi^(arrow.b arrow.t)_(2 2), chi^(arrow.b arrow.b)_(2 2)))
+   
+ $],
+ [#pause #pause $U^I = [chi_0^(-1) - chi^(-1)]_(I I)$],
+ [#pause #sym.arrow.r],
+ [$U^(I sigma) = ???$],
+  )
+
+
+])
+
+== What is screening $U$?
+
+#grid(columns: (1fr, 1fr), align: horizon + center, inset: 0.5em,
 cetz.canvas({
   import cetz.draw: *
 
-  // grid((0,-5), (8,5), stroke: gray + .5pt)
-
-  // Valence
-  rect((-1, -1), (1, 1), stroke: none, fill: secondary, alpha: 0.5)
-  content((1.75, 1), [$E_F$], align: left)
-  circle((0, 0), radius: 0.2, fill: white, stroke: (dash: "dashed", paint: primary))
-
-  // Vacuum
-  circle((0, 4), radius: 0.2, fill: primary, stroke: none)
-  line((-1, 3.5), (1, 3.5), stroke: (dash: "dashed", paint: primary))
-  content((1.75, 3.5), [$E_"vac"$], align: left)
-
-  // Arrow
-  arc((0,0), start: -30deg, stop: 30deg, radius: 4, mark: (end: ">", fill: black))
-  
-  let photon(amplitude: 1, phases: 2, scale: 8, samples: 1000, angle: 0, start-x: 0, start-y: 0, ..args) = {
-    line(..(for x in range(0, samples + 1) {
-      let x = x / samples
-      // A Gaussian envelope with sigma = 1/4 and mean = 1/2 and height = amplitude
-      let envelope = amplitude * calc.exp(-calc.pow(((x - 0.5) / (0.25)), 2))
-
-      let phase = (2 * phases * calc.pi) * x
-
-      // Rotate the output by angle
-      let xval = x * scale
-      let yval = calc.sin(phase) * envelope
-
-      let rotated-x = xval * calc.cos(angle) - yval * calc.sin(angle)
-      let rotated-y = xval * calc.sin(angle) + yval * calc.cos(angle)
-      ((start-x + rotated-x, start-y + rotated-y),)
-    }), ..args)
-
-    let subdivs = 8
-    for phase in range(0, phases) {
-      let x = phase / phases
-      for div in range(1, subdivs + 1) {
-        let p = 2 * calc.pi * (div / subdivs)
-        let y = calc.sin(p) * amplitude
-        let x = x * scale + div / subdivs * scale / phases
-      }
+  let counter = 0
+  let positions = ((0, 0), (2, 5), (3, 2), (4, -1), (6, 2), (5, 5), (-1, 3),)
+  for pos in positions {
+    counter = counter + 1
+    for i in range(1, counter) {
+      line(name: "line", positions.at(i - 1), pos, stroke: gray + 1pt)
+      // content("line", text(fill: gray, [$chi_(#i #counter)$]), midpoint: 0.5)
     }
   }
-  photon(amplitude: 0.8, phases: 9, start-x: -0.25, start-y: 0.25, scale: 3, fill: none, angle: 2.5, mark: (start: ">", fill: black))
+  counter = 0
+  for pos in positions {
+    counter = counter + 1
+    circle(pos, radius: 0.5, fill: primary, stroke: none, name: "circle")
+    content("circle", text(fill: white, [#counter]))
+  }
 }),
-  image("figures/arpes.png", height: 40%),
-  image("figures/arpes_puppin.png", height: 40%),
-))
+cetz.canvas({
+  import cetz.draw: *
 
-#blcite(<delaTorre2021>)#blcite(<Puppin2020>)
-#v(-2.5em)
-#pause ... but how can we routinely compute them? #pause
-- GW: accurate, expensive, often ill-behaved, diagrammatic
-- DFT: plagued by intrinsic errors
+  rect((-4, -3), (4, 3), stroke: none, fill: secondary, alpha: 0.5)
+  content((4, 3), [bath], anchor: "north-east", padding: 0.5em)
+  circle((0, 0), radius: 0.5, fill: primary, stroke: none)
+  
+}),
+  [all sites included in response matrix],
+  [only one site included in response matrix],
+  [bare $U$],
+  [fully-screened $U$],
+)
+
+#slide(repeat: 11, self=> [
+
+  #let (uncover, only, alternatives, delayedmark, delayedmarkhl) = methods-with-marks(self)
+  #table(columns: (auto, auto, 1fr), align: horizon + center, inset: 1em,
+    [
+      #pause
+      fully-screened],
+    [
+      #pause
+      #set text(size: 0.8em)
+      $
+        mat(mat(delim: #none, chi^(arrow.t arrow.t)_(1 1),                            ;                            , chi^(arrow.b arrow.b)_(1 1)),;,
+            mat(delim: #none, chi^(arrow.t arrow.t)_(2 2),                            ;                            , chi^(arrow.b arrow.b)_(2 2)))
+      $ 
+    ],
+    [
+      #pause
+      $
+        U^(I sigma) = 1 / (chi_0)^(sigma sigma)_(I I) - 1 / chi^(sigma sigma)_(I I)
+      $
+    ],
+
+    [
+      #pause
+      screened by \ opposite spin],
+    [
+      #pause
+      #set text(size: 0.8em)
+      $
+      mat(mat(delim: #none, chi^(arrow.t arrow.t)_(1 1), chi^(arrow.t arrow.b)_(1 1); chi^(arrow.b arrow.t)_(1 1), chi^(arrow.b arrow.b)_(1 1)),;,
+          mat(delim: #none, chi^(arrow.t arrow.t)_(2 2), chi^(arrow.t arrow.b)_(2 2); chi^(arrow.b arrow.t)_(2 2), chi^(arrow.b arrow.b)_(2 2)))
+      $ 
+    ],
+    [
+      #pause
+      $
+      f^(sigma sigma')_I = [(chi_0)^(sigma sigma)_(I I)]^(-1) - [chi^(sigma sigma)_(I I)]^(-1) #pause \ f^(sigma sigma')_(I) stretch(arrow.r)^(???) U^I "or" U^(I sigma)
+      $
+    ],
+
+    [
+      #pause
+      also screened by \ other Hubbard sites],
+    [
+      #pause
+      #set text(size: 0.8em)
+    $
+    mat(mat(delim: #none, chi^(arrow.t arrow.t)_(1 1), chi^(arrow.t arrow.b)_(1 1); chi^(arrow.b arrow.t)_(1 1), chi^(arrow.b arrow.b)_(1 1)),
+        mat(delim: #none, chi^(arrow.t arrow.t)_(1 2), chi^(arrow.t arrow.b)_(1 2); chi^(arrow.b arrow.t)_(1 2), chi^(arrow.b arrow.b)_(1 2));
+        mat(delim: #none, chi^(arrow.t arrow.t)_(2 1), chi^(arrow.t arrow.b)_(2 1); chi^(arrow.b arrow.t)_(2 1), chi^(arrow.b arrow.b)_(2 1)), 
+        mat(delim: #none, chi^(arrow.t arrow.t)_(2 2), chi^(arrow.t arrow.b)_(2 2); chi^(arrow.b arrow.t)_(2 2), chi^(arrow.b arrow.b)_(2 2)))
+    $ 
+    ],
+    [
+      #pause
+      $ f^(sigma sigma')_(I J) = ... $ (left as an exercise to the reader)
+    ]
+  )
+])
+
+= Advantages of spin-resolved linear response
+#focus-slide()[1. Conceptual consistency]
+== 
+
+#align(center + horizon, [spin-resolved linear response #sym.arrow.l.r spin-resolved DFT+_U_ functional])
+
 #pause
+#align(right + bottom, [... we didn't explore DFT+$U^sigma$; instead see BLOR@Burgess2023)])
 
-#box[#move(dy: 0.1em, image("figures/lightbulb.png", height: 1em))] Koopmans functionals: overcome limitations of DFT $arrow.r$ a functional that can accurately predict single-particle excitations
-#v(-1em)
+#focus-slide()[2. Unconstrained constrained linear response]
+== Unconstrained constrained linear response
 
-= The failures of DFT
+Suppose we want to compute $ lr((d^2E_"Hxc") / (d (n^I)^2) |)_(mu^I)$
+
+This is easy with spin-resolved LR:
+
+$
+  (d^2 E_"Hxc") / (d (n^I)^2) = & 1 / 2 (d v_"Hxc"^arrow.t + d v_"Hxc"^arrow.b) / d(n^arrow.t + n^arrow.b)
+  = 1 / 2 (f^(arrow.t arrow.t ) d n^arrow.t + f^(arrow.t arrow.b) d n^arrow.b + f^(arrow.b arrow.t) d n^arrow.t + f^(arrow.b arrow.b) d n^arrow.b) / (d n^arrow.t + d n^arrow.b)
+$
+
+"Impose" the constraint by setting $d n^arrow.t = d n^arrow.b$ to get...
+
+$
+  lr((d^2E_"Hxc") / (d n^2) |)_(mu) = & 1/4 (f^(arrow.t arrow.t) + f^(arrow.b arrow.b) + f^(arrow.t arrow.b) + f^(arrow.b arrow.t))
+$
+
+This simple average is one choice (of many) for $M: f^(sigma sigma')_I arrow.r U^I$
+
+#focus-slide()[3. We can recover conventional linear response]
+
+== Conventional linear response
+
+For conventional LR, $ v^(I arrow.t) = v^(I arrow.b)$ #pause, in which case:
+
+$
+d n = sum_sigma d n^(sigma) = sum_(sigma sigma') chi^(sigma sigma') d v^(sigma') = sum_(sigma sigma') chi^(sigma sigma') d v
+arrow.double.r.long chi_"conv" = (d n) / (d v) = sum_(sigma sigma') chi^(sigma sigma')
+$
+#pause
+Likewise,
+$
+  (epsilon^(-1))_"conv" = ... = 1 / 2 sum_(sigma sigma') (f chi)^(sigma sigma')
+$
+#pause
+And thus
+
+$
+  U = (epsilon^(-1) - 1) chi^(-1) = 1 / 2 (sum_(sigma sigma') (f chi)^(sigma sigma')) / (sum_(sigma sigma') chi^(sigma sigma'))
+$
+#focus-slide()[4. $J$ is free]
+
+==
+As defined by 
+
+$
+  J = - 1 / 2 (d v_"Hxc"^arrow.t - d v_"Hxc"^arrow.b) / (d (n^arrow.t - n^arrow.b)) = - 1 / 4 ((f^(arrow.t arrow.t) - f^(arrow.b arrow.t)) d n^arrow.t - (f^(arrow.b arrow.b) - f^(arrow.t arrow.b)) d n^arrow.b)/ (d (n^arrow.t - n^arrow.b))
+$
+
+Different ways to define $J$:
++ while keeping $n = n^arrow.t + n^arrow.b$ fixed:
+  $
+    J = - 1 / 4 (f^(arrow.t arrow.t) - f^(arrow.b arrow.t) - f^(arrow.t arrow.b) + f^(arrow.b arrow.b))
+  $
++ for a perturbation where $d v^arrow.t = - d v^arrow.b$
+
+#pause
+#focus-slide()[5. Easy to implement]
+
+==
+#slide(repeat: 5, self => [
+
+  #let (uncover, only, alternatives, delayedmark, delayedmarkhl) = methods-with-marks(self)
+
+  #align(center, [
+
+  #alternatives()[
+    #image("figures/fig_combined_U_J_and_occ.svg", height: 50%)
+  ][
+    #image("figures/fig_MnO_magmom.svg", height: 70%)
+  ][
+    #image("figures/fig_MnO_bandgap.svg", height: 70%)
+  ]
+  ])
+  #v(-1em)
+  #pause
+  #pause
+  #pause
+#align(right, [... for more details see Linscott et al. 2018. #pause Since then used by many authors@Orhan2020@Lambert2023@MacEnulty2023@Moore2024@MacEnulty2024 and opened the door to DFT+$U$-inspired approaches@Burgess2023@Burgess2024])
+
+])
+
+
+#matrix-slide(repeat: 2, self => [
+
+  #let (uncover, only, alternatives) = utils.methods(self)
+
+  #let data = read("figures/figure_2_cropped_recoloured.svg", encoding: none)
+  #alternatives()[
+    #image-transparency(data, format: "svg", alpha: 100%)
+    #text([spin-resolved linear response])
+  ][
+    #image-transparency(data, format: "svg", alpha: 20%)
+    #text(fill: gray, [spin-resolved linear response])
+  ]
+],[
+  #let data = read("figures/fig_en_curve_sl_annotated_zoom_recolored.svg", encoding: none)
+  #alternatives()[
+    #image-transparency(data, format: "svg", alpha: 20%)
+    #text(fill: gray, [orbital energy/ΔSCF equivalence \ (Koopmans functionals)])
+  ][
+    #image-transparency(data, format: "svg", alpha: 100%)
+    #text([orbital energy/ΔSCF equivalence \ (Koopmans functionals)])
+  ]
+])
+
+= Koopmans functionals
 
 == Total energy differences vs. eigenvalues
 
@@ -130,7 +346,7 @@ $
 
 but DFT does #emph[not]
 ],[
-  #image(width: 20em, "figures/fig_en_curve_gradients_zoom.svg")
+  #image(width: 20em, "figures/fig_en_curve_gradients_zoom_recolored.svg")
 ]
 ))
 
@@ -149,7 +365,7 @@ grid(align: horizon, columns: (1fr, auto), column-gutter: 1em,
   - independent of $f_i$
   - equal to $Delta E$ of explicit electron addition/removal
 ],[
-  #image(width: 20em, "figures/fig_en_curve_gradients_zoom.svg")
+  #image(width: 20em, "figures/fig_en_curve_gradients_zoom_recolored.svg")
 ]
 ))
 
@@ -175,7 +391,7 @@ $
 #uncover("3-")[#annot(<restore_linear>, pos: bottom)[#align(center, [restores linear dependence on $f_i$])]]
 
 ],[
-  #image(width: 20em, "figures/fig_en_curve_gradients_zoom.svg")
+  #image(width: 20em, "figures/fig_en_curve_gradients_zoom_recolored.svg")
 ]))
 
 ])
@@ -480,12 +696,6 @@ table.hline(),
   
 ]
 
-== Model systems
-=== Hooke's atom@Schubert2023
-
-#align(center + horizon, 
-  image("figures/schubert_vxc_only.jpeg", height: 70%)
-)
 
 = Caveats
 
@@ -504,112 +714,6 @@ table.hline(),
 - Dielectric-dependent hybrid functionals of Galli and co-workers@Skone2016a
 - Scaling corrections of Yang and co-workers@Li2018
 
-= Extensions
-= Non-collinear spin
-== Non-collinear spin
-
-$ rho_i (bold(r)) pause arrow.r bold(rho)_i (bold(r)) = (rho_i (bold(r)), m_i^x (bold(r)), m_i^y (bold(r)), m_i^z (bold(r))) $
-
-#pause
-
-e.g. for the corrective potential
-
-$ v_i^"qKI" = - 1 / 2 integral dif bold(r) dif bold(r)' rho_i (bold(r)) f_"Hxc" (bold(r), bold(r)') rho_i (bold(r)') + (1 - f_i) integral d bold(r)' f_"Hxc" (bold(r), bold(r)') rho_i (bold(r)') $
-
-#pause
-
-#align(center, sym.arrow.b)
-
-$ v_i^"qKI" = - 1 / 2 integral dif bold(r) dif bold(r)' bold(rho)_i (bold(r)) bb(F)_"Hxc" (bold(r), bold(r)') bold(rho)_i (bold(r)') sigma_0 + (1 - f_i) sum_alpha integral d bold(r)' [bb(F)_"Hxc" (bold(r), bold(r)') bold(rho)_i (bold(r)')]_alpha sigma_alpha $
-
-
-#blcite(<Marrazzo2024>)
-
-#pagebreak()
-
-CsPbBr#sub[3] #blcite(<Marrazzo2024>)
-#v(-2em)
-#align(center + horizon,
-image("figures/marrazzo_CsPbBr3_bands.svg", height: 50%)
-)
-#table(align: center, columns: (auto, 1fr, 1fr, 1fr, 1fr, 1fr, 1.5fr), inset: 0.5em, stroke: none,
-table.header([], [LDA ], [HSE ], [G#sub[0]W#sub[0] ], [scGW̃ ], [*KI*], [exp ]),
-table.hline(),
-[*with SOC*], [0.18], [0.78], [0.94], [1.53], [*1.78*], [1.85],
-[without SOC], [1.40], [2.09], [2.56], [3.15], [3.12], [],
-)
-
-= Optical spectra
-== Optical spectra
-
-Solve the BSE, using Koopmans eigenvalues in lieu of GW
-
-#pause
-
-#v(-1em)
-#align(center + horizon,
-grid(columns: 2,
-image("figures/silicon_bse_spectra.png", height: 50%),
-image("figures/silicon_bse_excitons.png", height: 50%)
-))
-
-#v(-1em)
-
-#show table.cell: it => {
-  set text(size: 0.8em)
-  it
-}
-#table(align: center + horizon, columns: (auto, 1fr, 1fr, 1fr, 1fr), inset: 0.5em, stroke: none,
-table.header([silicon], [indirect gap ], [direct gap ], [first excitonic peak ], [excitonic binding energy ]),
-table.hline(),
-[*qKI+BSE*], [1.12], [3.31], [3.42], [0.09], 
-[G#sub[0]W#sub[0]+BSE], [1.17], [3.25], [3.34], [0.09],
-)
-
-= Computational cost and scaling
-== Computational cost and scaling
-#align(center + horizon,
-image("figures/timings/benchmark.svg", width: 80%)
-)
-
-#pagebreak()
-
-The vast majority of the computational cost: determining screening parameters
-
-$
-  alpha_i = (angle.l n_i|epsilon^(-1) f_"Hxc"|n_i angle.r) / (angle.l n_i|f_"Hxc"|n_i angle.r)
-$
-
-#pause
-
-- a local measure of screening of electronic interactions #pause
-- one screening parameter per orbital
-- must be computed #emph[ab initio] via... #pause
-  - $Delta$SCF@Nguyen2018@DeGennaro2022a: embarrassingly parallel steps which each cost $cal(O)(N_"SC"^3) tilde cal(O)(N_bold(k)^3 N^3)$ #pause
-  - DFPT@Colonna2018@Colonna2022: $cal(O)(N_bold(k)^2 N^3)$
-
-== Machine-learned electronic screening
-#slide[
-  #grid(
-    columns: (1fr, 1fr),
-    align: center + horizon,
-    gutter: 1em,
-    image(
-      "figures/convergence_key.png",
-      height: 5%,
-    ) +  v(-1em) +
-    image(
-      "figures/convergence_fig.png",
-      height: 55%,
-    ),
-    image("figures/speedup.png", height: 60%),
-
-    [*accurate* to within $cal("O")$(10 meV) _cf._ typical band gap accuracy of $cal("O")$(100 meV)],
-    [*speedup* of $cal("O")$(10) to $cal("O")$(100)],
-  )
-
-  #blcite(<Schubert2024>)
-]
 
 // == 
 // #image("figures/supercell_workflow.png", width: 100%)
@@ -650,48 +754,6 @@ image("figures/supercell_workflow.png", width: 100%)
 
 ]
 
-== Automated Wannierisation
-#slide()[
-  Koopmans functionals rely heavily on Wannier functions...
-  - to initialise the minmising orbitals, _or_
-  - in place of the minimising orbitals entirely
-
-#pause
-
-#grid(
-  columns: (2fr, 2fr, 3fr),
-  align: center + horizon,
-  gutter: 1em,
-  image("figures/proj_disentanglement_fig1a.png", height: 45%),
-  image("figures/new_projs.png", height: 45%),
-  image("figures/target_manifolds_fig1b.png", height: 45%),
-
-  text("projectability-based disentanglement") + cite(<Qiao2023>),
-  text("use PAOs found in pseudopotentials"),
-  text("parallel transport to separate manifolds") + cite(<Qiao2023a>),
-)
-]
-
-== 
-#blcite(<Huber2020>)
-#v(-2em)
-#align(center,
-  [
-  #grid(columns: 3, align: horizon, column-gutter: 0.5em,
-    image("media/logos/koopmans_grey_on_transparent.svg", height: 3em),
-    image("figures/handshake.png", height: 2em, alt: "handshake"),
-    image("media/logos/aiida.svg", height: 3em)
-  )
-  #pause `$ koopmans run tio2.json` #pause $arrow.r$ `$ koopmans run --engine=aiida tio2.json`
-  ]
-)
-
-remote compute, parallel step execution, provenance-tracking, (requires configuration, WIP...)
-
-#pause
-#align(center, 
-  image("figures/aiida-speed-up.svg", width: 70%)
-)
 
 == 
 #slide()[
@@ -713,6 +775,7 @@ remote compute, parallel step execution, provenance-tracking, (requires configur
     #sym.arrow.r
   ],
   [
+    #set text(size: 0.7em)
     #image("figures/Unfold_And_Interpolate_bandstructure.png", height: 60%)
     #table(columns: (auto, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr), inset: 0.5em, stroke: none,
     table.header([], [LDA], [HSE], [GW#sub[0]], [scGW̃ ], [KI], [exp]),
@@ -753,53 +816,19 @@ remote compute, parallel step execution, provenance-tracking, (requires configur
   - ensemble DFT
   - RDMFT
 
-== Want to find out more?
-#slide()[
-#show grid.cell: it => {
-  let weight = "regular"
-  if it.y == 1 {
-    weight = "bold"
-  }
-  if it.x < 3 {
-    set text(size: 0.8em, fill: silver.darken(50%), weight: weight)
-    it
-  } else {
-    set text(size: 0.8em, weight: weight)
-    it
-  }
-}
-#let nm_data = read("media/mugshots/nicola_marzari.jpeg", encoding: none)
-#let ms_data = read("media/mugshots/marija_stojkovic.jpg", encoding: none)
-#let nc_data = read("media/mugshots/nicola_colonna.png", encoding: none)
-#align(center + horizon, 
-grid(columns: (1fr, 1fr, 1fr, 1fr, 1.2fr), align: center + top, inset: 0.5em,
-  image-grayscale(nm_data, height: 50%),
-  image-grayscale(ms_data, height: 50%),
-  image-grayscale(nc_data, height: 50%),
-  image("media/mugshots/junfeng_qiao.jpeg", height: 50%),
-  image("media/mugshots/aleksandr_poliukhin.jpg", height: 50%),
-  [Nicola Marzari], [Marija Stojkovic], [Nicola Colonna], [Junfeng Qiao], [Aleksandr Poliukhin],
-  [Monday], [Monday], [Tuesday], [Poster B4.16 today!], [Thu 1000 Room C],
-  [spectral theories], [band alignment for photocatalysis], [non-collinear spin], [automated Wannierisation], [electron-phonon]
-) + [... or go to `koopmans-functionals.org`]
-)
-  
-]
-
-
 == Acknowledgements
 #align(center + horizon, 
 grid(columns: 9, column-gutter: 0.5em, align: center, row-gutter: 0.5em,
+  image("media/mugshots/david_oregan.jpg", height: 40%),
+  image("media/mugshots/andrew_burgess.jpeg", height: 40%),
   image("media/mugshots/nicola_colonna.png", height: 40%),
   image("media/mugshots/miki_bonacci.jpg", height: 40%),
   image("media/mugshots/aleksandr_poliukhin.jpg", height: 40%),
   image("media/mugshots/marija_stojkovic.jpg", height: 40%),
-  image("media/mugshots/giovanni_cistaro.jpeg", height: 40%),
-  image("media/mugshots/julian_geiger.jpg", height: 40%),
   image("media/mugshots/junfeng_qiao.jpeg", height: 40%),
   image("media/mugshots/yannick_schubert.jpg", height: 40%),
   image("media/mugshots/nicola_marzari.jpeg", height: 40%),
-  [Nicola Colonna], [Miki Bonacci], [Aleksandr Poliukhin], [Marija Stojkovic], [Giovanni Cistaro], [Julian Geiger], [Junfeng Qiao], [Yannick Schubert], [Nicola Marzari]
+  [David O'Regan], [Andrew Burgess], [Nicola Colonna], [Miki Bonacci], [Aleksandr Poliukhin], [Marija Stojkovic], [Junfeng Qiao], [Yannick Schubert], [Nicola Marzari]
 )
 )
 
@@ -884,8 +913,91 @@ Two options: #pause _1._ use a more advanced functional#pause, or _2._ stay in t
 #set text(size: 0.8em)
 #raw(read("scripts/gaas.json"), block: true, lang: "json")
 ]
+= Extensions
+= Non-collinear spin
+== Non-collinear spin
+
+$ rho_i (bold(r)) pause arrow.r bold(rho)_i (bold(r)) = (rho_i (bold(r)), m_i^x (bold(r)), m_i^y (bold(r)), m_i^z (bold(r))) $
+
+#pause
+
+e.g. for the corrective potential
+
+$ v_i^"qKI" = - 1 / 2 integral dif bold(r) dif bold(r)' rho_i (bold(r)) f_"Hxc" (bold(r), bold(r)') rho_i (bold(r)') + (1 - f_i) integral d bold(r)' f_"Hxc" (bold(r), bold(r)') rho_i (bold(r)') $
+
+#pause
+
+#align(center, sym.arrow.b)
+
+$ v_i^"qKI" = - 1 / 2 integral dif bold(r) dif bold(r)' bold(rho)_i (bold(r)) bb(F)_"Hxc" (bold(r), bold(r)') bold(rho)_i (bold(r)') sigma_0 + (1 - f_i) sum_alpha integral d bold(r)' [bb(F)_"Hxc" (bold(r), bold(r)') bold(rho)_i (bold(r)')]_alpha sigma_alpha $
 
 
+#blcite(<Marrazzo2024>)
+
+#pagebreak()
+
+CsPbBr#sub[3] #blcite(<Marrazzo2024>)
+#v(-2em)
+#align(center + horizon,
+image("figures/marrazzo_CsPbBr3_bands.svg", height: 50%)
+)
+#table(align: center, columns: (auto, 1fr, 1fr, 1fr, 1fr, 1fr, 1.5fr), inset: 0.5em, stroke: none,
+table.header([], [LDA ], [HSE ], [G#sub[0]W#sub[0] ], [scGW̃ ], [*KI*], [exp ]),
+table.hline(),
+[*with SOC*], [0.18], [0.78], [0.94], [1.53], [*1.78*], [1.85],
+[without SOC], [1.40], [2.09], [2.56], [3.15], [3.12], [],
+)
+
+= Optical spectra
+== Optical spectra
+
+Solve the BSE, using Koopmans eigenvalues in lieu of GW
+
+#pause
+
+#v(-1em)
+#align(center + horizon,
+grid(columns: 2,
+image("figures/silicon_bse_spectra.png", height: 50%),
+image("figures/silicon_bse_excitons.png", height: 50%)
+))
+
+#v(-1em)
+
+#show table.cell: it => {
+  set text(size: 0.8em)
+  it
+}
+#table(align: center + horizon, columns: (auto, 1fr, 1fr, 1fr, 1fr), inset: 0.5em, stroke: none,
+table.header([silicon], [indirect gap ], [direct gap ], [first excitonic peak ], [excitonic binding energy ]),
+table.hline(),
+[*qKI+BSE*], [1.12], [3.31], [3.42], [0.09], 
+[G#sub[0]W#sub[0]+BSE], [1.17], [3.25], [3.34], [0.09],
+)
+
+= Computational cost and scaling
+== Computational cost and scaling
+#align(center + horizon,
+image("figures/timings/benchmark.svg", width: 80%)
+)
+
+#pagebreak()
+
+The vast majority of the computational cost: determining screening parameters
+
+$
+  alpha_i = (angle.l n_i|epsilon^(-1) f_"Hxc"|n_i angle.r) / (angle.l n_i|f_"Hxc"|n_i angle.r)
+$
+
+#pause
+
+- a local measure of screening of electronic interactions #pause
+- one screening parameter per orbital
+- must be computed #emph[ab initio] via... #pause
+  - $Delta$SCF@Nguyen2018@DeGennaro2022a: embarrassingly parallel steps which each cost $cal(O)(N_"SC"^3) tilde cal(O)(N_bold(k)^3 N^3)$ #pause
+  - DFPT@Colonna2018@Colonna2022: $cal(O)(N_bold(k)^2 N^3)$
+
+= Machine-learned electronic screening
 == Machine-learned electronic screening
 
 #pagebreak()
@@ -997,7 +1109,7 @@ The use-case
   #blcite(<Schubert2024>)
 ]
 
-
+= Symmetries
 == Taking advantage of symmetries
 To compute screening parameters via DFPT...
 #algorithm(inset: 0.3em, indent: 1em, {
@@ -1027,6 +1139,50 @@ $bold(q) in "BZ" $ $arrow.r$ $bold(q) in "IBZ"(n)$ (the symmetry of the perturba
 $bold(k) in "BZ"$ $arrow.r$ $bold(k) in "IBZ"(bold(q))$ (can only use symmetries that leave $bold(q)$ invariant)
 
 #align(horizon + center, image("figures/bz-to-ibz-speedup.svg", height: 100%))
+
+= Automated Wannierisation
+== Automated Wannierisation
+#slide()[
+  Koopmans functionals rely heavily on Wannier functions...
+  - to initialise the minmising orbitals, _or_
+  - in place of the minimising orbitals entirely
+
+#pause
+
+#grid(
+  columns: (2fr, 2fr, 3fr),
+  align: center + horizon,
+  gutter: 1em,
+  image("figures/proj_disentanglement_fig1a.png", height: 45%),
+  image("figures/new_projs.png", height: 45%),
+  image("figures/target_manifolds_fig1b.png", height: 45%),
+
+  text("projectability-based disentanglement") + cite(<Qiao2023>),
+  text("use PAOs found in pseudopotentials"),
+  text("parallel transport to separate manifolds") + cite(<Qiao2023a>),
+)
+]
+
+== 
+#blcite(<Huber2020>)
+#v(-2em)
+#align(center,
+  [
+  #grid(columns: 3, align: horizon, column-gutter: 0.5em,
+    image("media/logos/koopmans_grey_on_transparent.svg", height: 3em),
+    image("figures/handshake.png", height: 2em, alt: "handshake"),
+    image("media/logos/aiida.svg", height: 3em)
+  )
+  #pause `$ koopmans run tio2.json` #pause $arrow.r$ `$ koopmans run --engine=aiida tio2.json`
+  ]
+)
+
+remote compute, parallel step execution, provenance-tracking, (requires configuration, WIP...)
+
+#pause
+#align(center, 
+  image("figures/aiida-speed-up.svg", width: 70%)
+)
 
 
 == Connections with approx. self-energies
@@ -1082,6 +1238,13 @@ $ angle.l phi_(i sigma)|v^"KIPZ"_(j sigma',"xc")|phi_(j sigma')angle.r approx{(1
 
   $ angle.l phi_(i sigma)|v^"KIPZ"_(j sigma',"xc")|phi_(j sigma')angle.r approx{angle.l phi_(i sigma)|v^"DFT"_(sigma,"xc")|phi_(i sigma)angle.r + (1/2 - f_(i sigma)) angle.l n_(i sigma)|epsilon^(-1)_(t-e) f_"Hxc"|n_(i sigma)angle.r - E_H [n_(i sigma)]}delta_(i j) delta_(sigma sigma')$
 ]
+
+== Model systems
+=== Hooke's atom@Schubert2023
+
+#align(center + horizon, 
+  image("figures/schubert_vxc_only.jpeg", height: 70%)
+)
 
 = References
 == References
